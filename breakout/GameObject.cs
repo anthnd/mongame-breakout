@@ -127,6 +127,21 @@ namespace breakout
             spriteBatch.Draw(Texture, Rectangle, c);
         }
 
+        // <summary>
+        /// Faster way of drawing GameObjects with an imported texture
+        /// </summary>
+        /// <param name="spriteBatch">A SpriteBatch instance</param>
+        /// <param name="color">Color for the GameObject to be rendered. Default is white.</param>
+        public void DrawTextured(SpriteBatch spriteBatch, Color? color = null)
+        {
+            Color c = color ?? Color.White;
+            spriteBatch.Draw(Texture, BoundingBox, c);
+        }
+
+        /// <summary>
+        /// Hides the GameObject from any interactions
+        /// </summary>
+        /// <param name="spriteBatch">A SpriteBatch instance</param>
         public void Disable(SpriteBatch spriteBatch)
         {
             Disabled = true;
@@ -135,5 +150,22 @@ namespace breakout
             spriteBatch.End();
         }
 
+
+        /// <summary>
+        /// Follows another GameObject in the specified axis
+        /// </summary>
+        /// <param name="gameObj">A GameObject instance</param>
+        /// <param name="dir">'h': follow horizontally, 'v': follow vertically</param>
+        public void Follow(GameObject gameObj, string dir)
+        {
+            if (dir == "h")
+            {
+                this.Position.X = gameObj.Position.X - this.Width/2;
+            }
+            else if (dir == "v") 
+            {
+                this.Position.Y = gameObj.Position.Y - this.Height/2;
+            }
+        }
     }
 }
