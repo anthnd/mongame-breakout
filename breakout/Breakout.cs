@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 using System.Collections.Generic;
 
 namespace breakout
@@ -38,6 +39,7 @@ namespace breakout
         const int brickLength = 40;
         const int brickHeight = 20;
         const int maxBrickStack = 5;
+        const float maxBounceAngle = 45 * MathHelper.Pi / 180;
         List<GameObject> bricks = new List<GameObject>();
         List<Texture2D> brickTextures = new List<Texture2D>();
         string[] gfxFileNames = {
@@ -128,7 +130,6 @@ namespace breakout
             ball.Position += ball.Velocity;
             CheckBallCollisions();
             ControlPaddle(keyboardState);
-            paddle.Follow(ball, "h");
             CheckPaddleWallCollision();
 
             base.Update(gameTime);
@@ -175,6 +176,7 @@ namespace breakout
         /// </summary>
         private void GenerateGeneralGameObjects()
         {
+            // Paddle at the bottom-center
             paddle = new GameObject
                 (
                     generalTexture,
@@ -187,6 +189,7 @@ namespace breakout
                     paddleHeight
                 );
 
+            // Ball just above the paddle with an initial velocity
             ball = new GameObject
                 (
                     generalTexture,
@@ -208,9 +211,7 @@ namespace breakout
         private void LoadTextureFiles()
         {
             foreach (var fileName in gfxFileNames)
-            {
                 brickTextures.Add(Content.Load<Texture2D>("graphics/" + fileName));
-            }
         }
 
 
@@ -224,7 +225,7 @@ namespace breakout
             {
                 for (int j = 0; j < GraphicsDevice.Viewport.Width; j += brickLength)
                 {
-                    
+                    // Create a new brick at the specified position
                     bricks.Add
                     (
                         new GameObject
@@ -233,6 +234,8 @@ namespace breakout
                             new Vector2(j, i)
                         )
                     );
+
+                    // Loops through the brickTextures
                     if (index == brickTextures.Count - 1)
                         index = 0;
                     else
@@ -247,21 +250,32 @@ namespace breakout
         /// </summary>
         private void CheckBallCollisions()
         {
+            // Ball collisions with the window walls
             if (ball.Rectangle.Right >= GraphicsDevice.Viewport.Width || ball.Rectangle.Left <= 0)
                 ball.Velocity.X *= -1;
             if (ball.Rectangle.Top <= 0)
                 ball.Velocity.Y *= -1;
 
+            // Ball collsion with the paddle
+            // Angled bounce depending on relative distance to paddle center
             if (ball.Rectangle.Intersects(paddle.Rectangle))
-                ball.Velocity.Y *= -1;
+            {
+                var relativeIntersectY = paddle.Rectangle.Center.X - ball.Rectangle.Center.X;
+                var normalizedRelativeIntersectionY = (double)relativeIntersectY / (paddleLength / 2);
+                var bounceAngle = normalizedRelativeIntersectionY * maxBounceAngle + MathHelper.PiOver2;
+                ball.Velocity.X = Speed * (float)Math.Cos(bounceAngle);
+                ball.Velocity.Y = Speed * (float)-Math.Sin(bounceAngle);
+            }
+                
 
+            // Reset ball on out of bounds
             if (ball.Position.Y > GraphicsDevice.Viewport.Height + 100)
             {
                 SetToStartPosition();
                 score -= ScorePenalty;
             }
-                
 
+            // Check all bricks for collision with the ball
             foreach (var brick in bricks)
             {
                 if (ball.Rectangle.Intersects(brick.BoundingBox))
@@ -270,7 +284,6 @@ namespace breakout
                     brick.Disable(spriteBatch);
                     score += ScoreGainBrick;
                 }
-                    
             }
         }
 
@@ -332,6 +345,17 @@ namespace breakout
         private float ScreenCenterVertical(float objHeight)
         {
             return (GraphicsDevice.Viewport.Height - objHeight) / 2;
+        }
+
+        /// <summary>
+        /// Returns the hypotenuse where the legs are both equal to speedComponent
+        /// </summary>
+        private float Speed
+        {
+            get
+            {
+                return (float)Math.Sqrt(2 * speedComponent * speedComponent);
+            }
         }
     }
 }
