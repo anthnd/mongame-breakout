@@ -167,5 +167,21 @@ namespace breakout
                 this.Position.Y = gameObj.Position.Y - this.Height/2;
             }
         }
+
+
+        /// <summary>
+        /// Checks whether all GameObjects in a list have been disabled
+        /// </summary>
+        /// <param name="list">A GameObject List</param>
+        /// <returns></returns>
+        static public Boolean IsDisabledList(List<GameObject> list)
+        {
+            foreach (var obj in list)
+            {
+                if (obj.Disabled)
+                    return true;
+            }
+            return false;
+        }
     }
 }

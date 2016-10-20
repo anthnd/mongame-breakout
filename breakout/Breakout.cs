@@ -21,6 +21,7 @@ namespace breakout
 
         // Initializing GameObject, texture and keyboard state variables
         GameObject paddle, ball;
+        Level level1;
         Texture2D generalTexture;
         SpriteFont font;
         KeyboardState keyboardState;
@@ -39,9 +40,9 @@ namespace breakout
         const int brickLength = 40;
         const int brickHeight = 20;
         const int maxBrickStack = 5;
-        const float maxBounceAngle = 45 * MathHelper.Pi / 180;
-        List<GameObject> bricks = new List<GameObject>();
-        List<Texture2D> brickTextures = new List<Texture2D>();
+        const float maxBounceAngle = 55 * MathHelper.Pi / 180;
+        //List<GameObject> bricks = new List<GameObject>();
+        //List<Texture2D> brickTextures = new List<Texture2D>();
         string[] gfxFileNames = {
             "brick_blue",
             "brick_yellow",
@@ -100,9 +101,23 @@ namespace breakout
 
             // Loading
             font = Content.Load<SpriteFont>("Score");
-            LoadTextureFiles();
             GenerateGeneralGameObjects();
-            GenerateBricks();
+
+            // Load level
+            level1 = new Level();
+            level1.LoadTextureFiles(gfxFileNames, Content);
+            for (int i = 0; i < maxBrickStack * brickHeight; i += brickHeight)
+            {
+                for (int j = 0; j < GraphicsDevice.Viewport.Width; j += brickLength)
+                {
+                    level1.ObjectPositions.Add
+                        (
+                            new Vector2(j, i)
+                        );
+                }
+            }
+            level1.GenerateObjects();
+            //GenerateBricks();
         }
 
 
@@ -150,10 +165,6 @@ namespace breakout
             paddle.Draw(spriteBatch, new Color(242, 244, 255));
             ball.Draw(spriteBatch, new Color(242, 244, 255));
 
-            // Draw the generated bricks
-            foreach (var brick in bricks)
-                brick.DrawTextured(spriteBatch);
-
             // Draw the score
             spriteBatch.DrawString(
                 font,
@@ -164,6 +175,9 @@ namespace breakout
                 ),
                 Color.White
             );
+
+            // Draw the level
+            level1.Draw(spriteBatch);
 
             spriteBatch.End();
 
@@ -206,46 +220,6 @@ namespace breakout
 
 
         /// <summary>
-        /// Load the files in the graphics files according to the supplmented filenames in gfxFileNames
-        /// </summary>
-        private void LoadTextureFiles()
-        {
-            foreach (var fileName in gfxFileNames)
-                brickTextures.Add(Content.Load<Texture2D>("graphics/" + fileName));
-        }
-
-
-        /// <summary>
-        /// Populates the bricks List with brick GameObjects
-        /// </summary>
-        private void GenerateBricks()
-        {
-            int index = 0;
-            for (int i = 0; i < maxBrickStack * brickHeight; i += brickHeight)
-            {
-                for (int j = 0; j < GraphicsDevice.Viewport.Width; j += brickLength)
-                {
-                    // Create a new brick at the specified position
-                    bricks.Add
-                    (
-                        new GameObject
-                        (
-                            brickTextures[index],
-                            new Vector2(j, i)
-                        )
-                    );
-
-                    // Loops through the brickTextures
-                    if (index == brickTextures.Count - 1)
-                        index = 0;
-                    else
-                        index++;
-                }
-            }
-        }
-
-
-        /// <summary>
         /// Checks the ball's collisions with the walls, paddles, and bricks and when it goes off-screen
         /// </summary>
         private void CheckBallCollisions()
@@ -276,12 +250,12 @@ namespace breakout
             }
 
             // Check all bricks for collision with the ball
-            foreach (var brick in bricks)
+            foreach (var obj in level1.Objects)
             {
-                if (ball.Rectangle.Intersects(brick.BoundingBox))
+                if (ball.Rectangle.Intersects(obj.BoundingBox))
                 {
                     ball.Velocity.Y *= -1;
-                    brick.Disable(spriteBatch);
+                    obj.Disable(spriteBatch);
                     score += ScoreGainBrick;
                 }
             }
