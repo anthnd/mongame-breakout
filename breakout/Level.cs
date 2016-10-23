@@ -11,9 +11,10 @@ namespace breakout
 {
     class Level
     {
-        public List<Texture2D> ObjectTextures = new List<Texture2D>();
-        public List<Vector2> ObjectPositions = new List<Vector2>();
-        public List<GameObject> Objects = new List<GameObject>();
+        public List<Texture2D> ObjectTextures;
+        public List<Vector2> ObjectPositions;
+        public List<GameObject> Objects;
+        public List<int> ObjectHeightsSorted;
 
 
         /// <summary>
@@ -21,7 +22,10 @@ namespace breakout
         /// </summary>
         public Level()
         {
-
+            ObjectTextures = new List<Texture2D>();
+            ObjectPositions = new List<Vector2>();
+            Objects = new List<GameObject>();
+            ObjectHeightsSorted = new List<int>();
         }
 
 
@@ -51,7 +55,7 @@ namespace breakout
                         (
                             new GameObject
                             (
-                                this.ObjectTextures[index],
+                                this.ObjectTextures[GetTextureIndex((int)pos.Y)],
                                 pos
                             )
                         );
@@ -61,6 +65,8 @@ namespace breakout
                         index++;
                 }
             }
+            else
+                Console.WriteLine("ObjectTextures or ObjectPositions are empty.");
         }
 
 
@@ -70,8 +76,52 @@ namespace breakout
         /// <param name="spriteBatch">A SoriteBatch instance</param>
         public void Draw(SpriteBatch spriteBatch)
         {
-            foreach (var obj in Objects)
-                spriteBatch.Draw(obj.Texture, obj.BoundingBox, Color.White);
+            if (Objects.Any())
+            {
+                foreach (var obj in Objects)
+                    spriteBatch.Draw(obj.Texture, obj.BoundingBox, Color.White);
+            }
+            else
+                Console.WriteLine("No objects to draw");
+        }
+
+
+        public void SetObjectPositions(List<Vector2> posList)
+        {
+            posList.Sort((pos1, pos2) => pos1.Y.CompareTo(pos2.Y));
+            ObjectPositions.AddRange(posList);
+            foreach (var pos in ObjectPositions)
+            {
+                if (ObjectHeightsSorted.Contains((int)pos.Y) == false)
+                    ObjectHeightsSorted.Add((int)pos.Y);
+            }
+        }
+
+
+        public int GetTextureIndex(int objHeight)
+        {
+            if (ObjectPositions.Any() && ObjectHeightsSorted.Any())
+                return ObjectHeightsSorted.IndexOf(objHeight) % ObjectTextures.Count;
+            else
+                return -1;
+        }
+
+
+        public void Disable(SpriteBatch spriteBatch)
+        {
+            Objects.ForEach(obj => obj.Disable(spriteBatch));
+        }
+
+
+        public void Enable(SpriteBatch spriteBatch)
+        {
+            Objects.ForEach(obj => obj.Enable(spriteBatch));
+        }
+
+
+        public void Complete()
+        {
+            
         }
 
     }

@@ -138,6 +138,16 @@ namespace breakout
             spriteBatch.Draw(Texture, BoundingBox, c);
         }
 
+
+        public void Enable(SpriteBatch spriteBatch)
+        {
+            Disabled = false;
+            spriteBatch.Begin();
+            spriteBatch.Draw(Texture, Rectangle, Color.White);
+            spriteBatch.End();
+        }
+
+
         /// <summary>
         /// Hides the GameObject from any interactions
         /// </summary>
@@ -178,10 +188,10 @@ namespace breakout
         {
             foreach (var obj in list)
             {
-                if (obj.Disabled)
-                    return true;
+                if (obj.Disabled == false)
+                    return false;
             }
-            return false;
+            return true;
         }
     }
 }
